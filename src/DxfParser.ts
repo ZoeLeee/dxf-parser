@@ -106,11 +106,18 @@ export interface ILayerTableDefinition {
 	dxfSymbolName: 'LAYER';
 	parseTableRecords(): Record<string, ILayer>;
 }
+export interface IBlockRecordTableDefinition {
+	tableRecordsProperty: 'blockRecord';
+	tableName: 'blockRecord';
+	dxfSymbolName: 'BLOCK_RECORD';
+	parseTableRecords (): Record<string, IBlockRecord>;
+}
 
 export interface ITableDefinitions {
 	VPORT: IViewPortTableDefinition;
 	LTYPE: ILineTypeTableDefinition;
 	LAYER: ILayerTableDefinition;
+	BLOCK_RECORD: IBlockRecordTableDefinition;
 }
 
 export interface IBaseTable {
@@ -134,6 +141,7 @@ export interface ITables {
 	viewPort: IViewPortTable;
 	lineType: ILayerTypesTable;
 	layer: ILayersTable;
+	blockRecord: Record<string, IBlockRecord>;
 }
 
 export type ITable = IViewPortTable | ILayerTypesTable | ILayersTable;
@@ -152,7 +160,6 @@ export interface IDxf {
 	header: Record<string, IPoint | number>;
 	entities: IEntity[];
 	blocks: Record<string, IBlock>;
-	blockRecord: Record<string, IBlockRecord>;
 	tables: ITables;
 }
 
