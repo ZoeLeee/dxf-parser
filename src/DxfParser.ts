@@ -442,7 +442,6 @@ export default class DxfParser {
 						tables[tableDefinitions[curr.value as keyof ITableDefinitions].tableName] = parseTable(curr);
 						log.debug('}');
 					} else {
-						console.log('curr.value: ', curr.value);
 						log.debug('Unhandled Table ' + curr.value);
 					}
 				} else {
@@ -491,7 +490,6 @@ export default class DxfParser {
 						if (curr.value === tableDefinition.dxfSymbolName) {
 							table[tableDefinition.tableRecordsProperty] = tableDefinition.parseTableRecords();
 						} else {
-							console.log(curr.value);
 							logUnhandledGroup(curr);
 							curr = scanner.next();
 						}
