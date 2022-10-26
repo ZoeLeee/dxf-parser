@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Dxf-Parser - Browser Sample</title>
-		
-		<script src="../../commonjs/index.js"></script>
-	</head>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
 	<body>
 		<input id="file-field" type="file"/>
 		
 		<pre id="output" stlye="font-family: monospace;">
 			
 		</pre>
+		<script src="../../commonjs/index.js"></script>
+
 		<script>
 			var outputElement = document.getElementById('output');
 			document.getElementById("file-field").onchange = function() {
@@ -21,12 +24,13 @@
 					var parser = new DxfParser();
 					var dxf = null;
 					try {
-						dxf = parser.parseSync(fileText);
+						dxf = parser.parse(fileText);
+						console.log('dxf: ', dxf);
 					} catch(err) {
 						return console.error(err.stack);
 					}
 					console.log('Success!');
-					outputElement.innerHTML = JSON.stringify(dxf, null, 4);
+					// outputElement.innerHTML = JSON.stringify(dxf, null, 4);
 				};
 			};
 

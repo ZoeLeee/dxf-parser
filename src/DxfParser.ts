@@ -138,10 +138,21 @@ export interface ITables {
 
 export type ITable = IViewPortTable | ILayerTypesTable | ILayersTable;
 
+export interface IBlockRecord{
+	name: string;
+	dbHandle:string;
+	ownHandle:string;
+	handle:string;
+	guid?:string;
+	trueName?:string;
+	frozen:boolean;
+}
+
 export interface IDxf {
 	header: Record<string, IPoint | number>;
 	entities: IEntity[];
 	blocks: Record<string, IBlock>;
+	blockRecord: Record<string, IBlockRecord>;
 	tables: ITables;
 }
 
@@ -252,12 +263,14 @@ export default class DxfParser {
 						log.debug('> TABLES');
 						dxf.tables = parseTables();
 						log.debug('<');
-					} else if (curr.value === 'EOF') {
+					} 
+					else if (curr.value === 'EOF') {
 						log.debug('EOF');
 					} else {
 						log.warn('Skipping section \'%s\'', curr.value);
 					}
-				} else {
+				} 
+				else {
 					curr = scanner.next();
 				}
 				// If is a new section
@@ -429,6 +442,7 @@ export default class DxfParser {
 						tables[tableDefinitions[curr.value as keyof ITableDefinitions].tableName] = parseTable(curr);
 						log.debug('}');
 					} else {
+						console.log('curr.value: ', curr.value);
 						log.debug('Unhandled Table ' + curr.value);
 					}
 				} else {
@@ -477,6 +491,7 @@ export default class DxfParser {
 						if (curr.value === tableDefinition.dxfSymbolName) {
 							table[tableDefinition.tableRecordsProperty] = tableDefinition.parseTableRecords();
 						} else {
+							console.log(curr.value);
 							logUnhandledGroup(curr);
 							curr = scanner.next();
 						}
@@ -744,6 +759,81 @@ export default class DxfParser {
 			return layers;
 		}
 
+		function parseBlockRecords(){
+			const blockRecord = {} as Record<string, IBlockRecord>;
+			let record = {} as IBlockRecord;
+			let recordName: string | undefined;
+
+			log.debug('Block_Record {');
+			curr = scanner.next();
+			while (!groupIs(curr, 0, 'ENDTAB')) {
+
+				switch (curr.code) {
+					case 2: // record name
+						record.name = curr.value as string;
+						recordName = curr.value as string;
+						curr = scanner.next();
+						break;
+					case 70: // frozen layer
+						record.frozen = (((curr.value as number) & 1) != 0 || ((curr.value as number) & 2) != 0);
+						curr = scanner.next();
+						break;
+					case 1005: // TrueColor
+						record.dbHandle = curr.value as string;
+						curr = scanner.next();
+						break;
+					case 1001: // TrueColor
+						if(curr.value==="AcDbDynamicBlockTrueName"){
+							curr = scanner.next();
+							if(curr.code===1000){
+								record.trueName = curr.value as string;
+							}
+						}
+						else if(curr.value==="AcDbDynamicBlockGUID"){
+							curr = scanner.next();
+							if(curr.code===1000){
+								record.guid = curr.value as string;
+							}
+						}
+						curr = scanner.next();
+						break;
+					case 100:
+						// ignore class markers
+						curr = scanner.next();
+						break;
+					case 330:
+						record.ownHandle = curr.value as string;
+						curr = scanner.next();
+						break;
+					case 0:
+						// New Layer
+						if (curr.value === 'BLOCK_RECORD') {
+							log.debug('}');
+							blockRecord[recordName!] = record;
+							log.debug('Layer {');
+							record = {} as any;
+							recordName = undefined;
+							curr = scanner.next();
+						}
+						break;
+					case 5:
+						record.handle = curr.value as string;
+						curr = scanner.next();
+						break;
+					default:
+						logUnhandledGroup(curr);
+						curr = scanner.next();
+						break;
+				}
+			}
+			// Note: do not call scanner.next() here,
+			//  parseLayerTable() needs the current group
+			log.debug('}');
+			blockRecord[recordName!] = record;
+
+			return blockRecord;
+		}
+
 		const tableDefinitions = {
 			VPORT: {
 				tableRecordsProperty: 'viewPorts',
@@ -762,6 +852,12 @@ export default class DxfParser {
 				tableName: 'layer',
 				dxfSymbolName: 'LAYER',
 				parseTableRecords: parseLayers
+			},
+			BLOCK_RECORD: {
+				tableRecordsProperty: 'blockRecord',
+				tableName: 'blockRecord',
+				dxfSymbolName: 'BLOCK_RECORD',
+				parseTableRecords: parseBlockRecords
 			}
 		} as ITableDefinitions;
 
