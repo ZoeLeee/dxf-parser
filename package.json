@@ -1,5 +1,5 @@
 {
-	"name": "dxf-parser",
+	"name": "@dodream/dxf-parser",
 	"version": "1.1.4",
 	"description": "Parse dxf files into a readable, logical js object.",
 	"type": "module",
@@ -29,9 +29,6 @@
 	"contributors": [
 		"Ben Zuill-Smith <bzuillsmith@gmail.com>"
 	],
-	"publishConfig": {
-		"registry": "https://nexus3.histron.cn/repository/npm-hosted/"
-	},
 	"license": "MIT",
 	"devDependencies": {
 		"@babel/core": "^7.10.4",
